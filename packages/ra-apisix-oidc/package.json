@@ -1,7 +1,10 @@
 {
     "name": "@arte/ra-apisix-oidc",
     "version": "0.1.0",
-    "repository": "git@github.com:artefactGitHub/ra-apisix-oidc.git",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/ArteGEIE/ra-apisix-oidc.git"
+    },
     "author": "Guillaume BILLEY <guillaume@marmelab.com>",
     "license": "MIT",
     "files": [
@@ -18,8 +21,6 @@
         "ra-core": "*"
     },
     "dependencies": {
-        "jwt-decode": "^4.0.0",
-        "keycloak-js": "^26.0.0",
         "ra-core": "^5.1.1"
     },
     "scripts": {
