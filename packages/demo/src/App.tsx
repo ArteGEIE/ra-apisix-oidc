@@ -1,4 +1,4 @@
-import { Admin, EditGuesser, ListGuesser, Resource } from "react-admin";
+import { Admin, EditGuesser, ListGuesser, Resource, ShowGuesser } from "react-admin";
 import { Layout } from "./Layout";
 
 import simpleRestDataProvider from "ra-data-simple-rest";
@@ -16,6 +16,7 @@ export const App = () => (
     authProvider={apisixOidcAuthProvider}
     loginPage={false}
   >
-    <Resource name="posts" list={ListGuesser} edit={EditGuesser} />
+    <Resource name="posts" list={ListGuesser} show={ShowGuesser} />
+    <Resource name="users" list={ListGuesser} show={ShowGuesser} />
   </Admin>
 );
