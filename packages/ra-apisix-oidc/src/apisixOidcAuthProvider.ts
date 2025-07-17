@@ -1,44 +1,75 @@
 import { type AuthProvider, PreviousLocationStorageKey } from "ra-core";
 
-// current host
-const oidcUrl = window.location.origin;
 
-export const apisixOidcAuthProvider: AuthProvider = {
-  login: () => {
-    return Promise.reject();
-  },
-  logout: async () => {
-    const accessToken = localStorage.getItem("access_token");
+export type ApisixAuthProviderParams = {
+  loginURL?: string;
+  logoutURL?: string;
+  meURL?: string;
+  storage?: Storage;
+};
+
+/**
+ * AuthProvider for react-admin using APISIX OIDC endpoints.
+ *
+ * @param {Object} options - Configuration options
+ * @param {string} [options.loginURL] - Login endpoint URL (default: `${window.location.origin}/oidc/login`)
+ * @param {string} [options.logoutURL] - Logout endpoint URL (default: `${window.location.origin}/oidc/logout`)
+ * @param {string} [options.meURL] - User info endpoint URL (default: `${window.location.origin}/oidc/me`)
+ * @param {Storage} [options.storage] - Storage to use for tokens (default: localStorage)
+ * @returns {AuthProvider} A react-admin AuthProvider implementation
+ *
+ * @example
+ * import { apisixOidcAuthProvider } from './apisixOidcAuthProvider';
+ *
+ * const authProvider = apisixOidcAuthProvider({
+ *   loginURL: 'http://localhost:9080/oidc/login',
+ *   logoutURL: 'http://localhost:9080/oidc/logout',
+ *   meURL: 'http://localhost:9080/oidc/me',
+ * });
+ */
+export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => AuthProvider = (options) => {
+  const {
+    loginURL = `${window.location.origin}/oidc/login`,
+    logoutURL = `${window.location.origin}/oidc/logout`,
+    meURL = `${window.location.origin}/oidc/me`,
+    storage = localStorage,
+  } = options || {};
+  return {
+    login: () => {
+      return Promise.reject();
+    },
+    logout: async () => {
+    const accessToken = storage.getItem("access_token");
     if (!accessToken) {
       return Promise.resolve();
     }
-    localStorage.removeItem("access_token");
-    return Promise.resolve(`${oidcUrl}/oidc/logout`);
+    storage.removeItem("access_token");
+    return Promise.resolve(logoutURL);
   },
   checkError: (error) => {
     if (error.status === 401) {
-      saveCurrentLocation();
-      localStorage.removeItem("access_token");
-      window.location.href = `${oidcUrl}/oidc/login`;
+      saveCurrentLocation(storage);
+      storage.removeItem("access_token");
+      window.location.href = loginURL;
       return Promise.reject();
     }
     return Promise.resolve();
   },
   checkAuth: async () => {
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = storage.getItem("access_token");
     if (!accessToken) {
       return Promise.reject({
-        redirectTo: `${oidcUrl}/oidc/login`,
+        redirectTo: loginURL,
       });
     }
     return Promise.resolve();
   },
   getIdentity: async () => {
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = storage.getItem("access_token");
     if (!accessToken) {
       return Promise.reject();
     }
-    const response = await fetch(`${oidcUrl}/oidc/me`, {
+    const response = await fetch(meURL, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -61,7 +92,7 @@ export const apisixOidcAuthProvider: AuthProvider = {
     return Promise.resolve(identity);
   },
   handleCallback: async () => {
-    const response = await fetch(`${oidcUrl}/oidc/me`);
+    const response = await fetch(meURL);
     if (!response.ok) {
       return Promise.reject();
     }
@@ -69,16 +100,17 @@ export const apisixOidcAuthProvider: AuthProvider = {
     if (!body.accessToken) {
       return Promise.reject();
     }
-    localStorage.setItem("access_token", body.accessToken);
+    storage.setItem("access_token", body.accessToken);
   },
+}
 };
 
-const saveCurrentLocation = () => {
+const saveCurrentLocation = (storage: Storage) => {
   if (window.location.href.includes("login")) {
     return; // Do not save the location if it's the login page
   }
   const locationToSave = window.location.href
     .replace(window.location.origin, "")
     .replace("/#/", "/");
-  localStorage.setItem(PreviousLocationStorageKey, locationToSave);
+  storage.setItem(PreviousLocationStorageKey, locationToSave);
 };

@@ -1,19 +1,20 @@
-import { Admin, EditGuesser, ListGuesser, Resource, ShowGuesser } from "react-admin";
+import { Admin, ListGuesser, Resource, ShowGuesser } from "react-admin";
 import { Layout } from "./Layout";
 
+import { apisixOidcAuthProvider, httpClient } from "@arte/ra-apisix-oidc";
 import simpleRestDataProvider from "ra-data-simple-rest";
-import { httpClient, apisixOidcAuthProvider } from "@arte/ra-apisix-oidc";
 
 const dataProvider = simpleRestDataProvider(
   "http://127.0.0.1:9080/api",
   httpClient,
 );
+const apisixAuthProvider = apisixOidcAuthProvider();
 
 export const App = () => (
   <Admin
     layout={Layout}
     dataProvider={dataProvider}
-    authProvider={apisixOidcAuthProvider}
+    authProvider={apisixAuthProvider}
     loginPage={false}
   >
     <Resource name="posts" list={ListGuesser} show={ShowGuesser} />
