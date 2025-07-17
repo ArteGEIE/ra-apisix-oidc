@@ -1,0 +1,66 @@
+services:
+  demo:
+    build:
+      dockerfile: packages/demo/docker/nodejs/Dockerfile
+      context: .
+      target: base
+    volumes:
+      - .:/app
+    working_dir: '/app/packages/demo'
+    command: 'npm run dev'
+    user: '${UID}:${GID}'
+    tty: true
+    env_file:
+      - ./.env.local
+    ports:
+      - '5173:5173'
+
+  demo-api:
+    build:
+      dockerfile: packages/demo/docker/nodejs/Dockerfile
+      context: .
+      target: base
+    volumes:
+      - .:/app
+    working_dir: '/app/packages/demo-api'
+    command: 'npm run dev'
+    user: '${UID}:${GID}'
+    tty: true
+    env_file:
+      - ./.env.local
+    ports:
+      - '3000:3000'
+
+  apisix:
+    image: apache/apisix:latest
+    volumes:
+      - ./packages/demo/docker/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./packages/demo/docker/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+    ports:
+      - "9080:9080"
+    environment:
+      - GATEWAY_PORT=9080
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-apisix}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-udfr6ORrDRavq9imuu72c4tpqWC9SHXL}
+
+  keycloak:
+    platform: linux/amd64
+    build:
+      dockerfile: packages/demo/docker/keycloak/Dockerfile
+      context: .
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_RELATIVE_PATH: /auth
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    command:
+      - start-dev
+      - --hostname=127.0.0.1
+      - --import-realm
+    ports:
+      - "8080:8080"
+
+volumes:
+  keycloak-data: {}
+

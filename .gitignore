@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+**/esm/ 
+**/lib/
+
+# npm logs
+npm-debug.log
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE files
+.vscode/
+
+# Environment files
+.env

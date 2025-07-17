@@ -1,0 +1,62 @@
+upstreams:
+  - name: "admin"
+    id: 1
+    type: roundrobin
+    nodes:
+      "demo:5173": 1
+  - name: "server"
+    id: 4
+    type: roundrobin
+    nodes:
+      "demo-api:3000": 1
+  - name: "keycloak"
+    id: 2
+    nodes:
+      "keycloak:8080": 1
+routes:
+  - name: "keycloak"
+    uri: "/auth/*"
+    upstream_id: 2
+
+  - name: "admin"
+    uris: ["/*"]
+    upstream_id: 1
+    plugins:
+      cors: {}
+
+  - name: "login"
+    uris: ["/oidc/*"]
+    upstream_id: 4
+    plugins:
+      cors: {}
+      openid-connect:
+        client_id: apisix
+        client_secret: udfr6ORrDRavq9imuu72c4tpqWC9SHXL
+        discovery: http://127.0.0.1:9080/auth/realms/demo/.well-known/openid-configuration
+        redirect_uri: http://127.0.0.1:9080/oidc/callback
+        bearer_only: false
+        realm: demo
+        logout_path: "/oidc/logout"
+        post_logout_redirect_uri: "http://127.0.0.1:9080"
+        ssl_verify: false
+        session:
+          secret: "1234567890123456"
+  # These routes should be secured by "Authorization: Bearer <token>"
+  - name: "server"
+    uris: ["/api/*"]
+    upstream_id: 4
+    plugins:
+      cors: {}
+      openid-connect:
+        client_id: apisix
+        client_secret: udfr6ORrDRavq9imuu72c4tpqWC9SHXL
+        discovery: http://127.0.0.1:9080/auth/realms/demo/.well-known/openid-configuration
+        scope: "openid profile"
+        bearer_only: true
+        realm: demo
+        logout_path: "/logout"
+        ssl_verify: false
+        set_userinfo_header: true
+        session:
+          secret: "1234567890123456"
+#END
