@@ -4,7 +4,7 @@ import { type AuthProvider, PreviousLocationStorageKey } from "ra-core";
 export type ApisixAuthProviderParams = {
   loginURL?: string;
   logoutURL?: string;
-  meURL?: string;
+  userInfoURL?: string;
   storage?: Storage;
 };
 
@@ -31,78 +31,84 @@ export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => Aut
   const {
     loginURL = `${window.location.origin}/oidc/login`,
     logoutURL = `${window.location.origin}/oidc/logout`,
-    meURL = `${window.location.origin}/oidc/me`,
+    userInfoURL = `${window.location.origin}/oidc/me`,
     storage = localStorage,
   } = options || {};
+  let isRedirecting = false;
   return {
     login: () => {
       return Promise.reject();
     },
     logout: async () => {
-    const accessToken = storage.getItem("access_token");
-    if (!accessToken) {
-      return Promise.resolve();
-    }
-    storage.removeItem("access_token");
-    return Promise.resolve(logoutURL);
-  },
-  checkError: (error) => {
-    if (error.status === 401) {
-      saveCurrentLocation(storage);
+      const accessToken = storage.getItem("access_token");
+      if (!accessToken) {
+        return Promise.resolve();
+      }
       storage.removeItem("access_token");
-      window.location.href = loginURL;
-      return Promise.reject();
-    }
-    return Promise.resolve();
-  },
-  checkAuth: async () => {
-    const accessToken = storage.getItem("access_token");
-    if (!accessToken) {
-      return Promise.reject({
-        redirectTo: loginURL,
+      return Promise.resolve(logoutURL);
+    },
+    checkError: (error) => {
+      if (error.status === 401) {
+        saveCurrentLocation(storage);
+        storage.removeItem("access_token");
+        window.location.href = loginURL;
+        return Promise.reject({ logoutUser: false, redirectTo: loginURL });
+      }
+      return Promise.resolve();
+    },
+    checkAuth: async () => {
+      const accessToken = storage.getItem("access_token");
+      if (!accessToken) {
+        if (!isRedirecting) {
+          isRedirecting = true;
+          saveCurrentLocation(storage);
+          setTimeout(() => {
+            window.location.href = loginURL;
+          }, 100);
+        }
+        return Promise.reject({ redirectTo: false });
+      }
+      return Promise.resolve();
+    },
+    getIdentity: async () => {
+      const accessToken = storage.getItem("access_token");
+      if (!accessToken) {
+        return Promise.reject();
+      }
+      const response = await fetch(userInfoURL, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
-    }
-    return Promise.resolve();
-  },
-  getIdentity: async () => {
-    const accessToken = storage.getItem("access_token");
-    if (!accessToken) {
-      return Promise.reject();
-    }
-    const response = await fetch(meURL, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    if (!response.ok) {
-      return Promise.reject();
-    }
-    const userInfo = await response.json();
-    const { user } = userInfo;
-    if (!user) {
-      return Promise.reject();
-    }
-    const identity = {
-      id: user.sub,
-      fullName: user.preferred_username || user.name || "",
-      avatar: user.picture || "",
-      email: user.email || "",
-      roles: user.roles || [],
-    };
-    return Promise.resolve(identity);
-  },
-  handleCallback: async () => {
-    const response = await fetch(meURL);
-    if (!response.ok) {
-      return Promise.reject();
-    }
-    const body = await response.json();
-    if (!body.accessToken) {
-      return Promise.reject();
-    }
-    storage.setItem("access_token", body.accessToken);
-  },
-}
+      if (!response.ok) {
+        return Promise.reject();
+      }
+      const userInfo = await response.json();
+      const { user } = userInfo;
+      if (!user) {
+        return Promise.reject();
+      }
+      const identity = {
+        id: user.sub,
+        fullName: user.preferred_username || user.name || "",
+        avatar: user.picture || "",
+        email: user.email || "",
+        roles: user.roles || [],
+      };
+      return Promise.resolve(identity);
+    },
+    handleCallback: async () => {
+      const response = await fetch(userInfoURL);
+      if (!response.ok) {
+        return Promise.reject();
+      }
+      const body = await response.json();
+      if (!body.accessToken) {
+        return Promise.reject();
+      }
+      storage.setItem("access_token", body.accessToken);
+    },
+  }
 };
 
 const saveCurrentLocation = (storage: Storage) => {
