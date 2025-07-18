@@ -51,7 +51,6 @@ export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => Aut
       if (error.status === 401) {
         saveCurrentLocation(storage);
         storage.removeItem("access_token");
-        window.location.href = loginURL;
         return Promise.reject({ logoutUser: false, redirectTo: loginURL });
       }
       return Promise.resolve();
