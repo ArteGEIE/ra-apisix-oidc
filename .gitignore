@@ -1,5 +1,6 @@
 # Node modules
 node_modules/
+var/
 
 # Build output
 dist/
@@ -18,3 +19,4 @@ npm-debug.log
 # Environment files
 .env
 .envrc
+
