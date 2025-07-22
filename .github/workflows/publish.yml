@@ -11,12 +11,8 @@ on:
 
 jobs:
   publish:
-    needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: packages/ra-apisix-oidc
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,6 +21,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org/'
       - name: Build
         run: make build-ra-apisix-oidc
+        env:
+          ARTE_NPMJS_TOKEN: ${{ secrets.ARTE_NPMJS_TOKEN }}
       - name: Publish to npm
         run: make publish
         env:
