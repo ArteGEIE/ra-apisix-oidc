@@ -56,7 +56,7 @@ services:
       - keycloak-data:/opt/keycloak/data
     command:
       - start-dev
-      - --hostname=127.0.0.1
+      - --hostname=localhost
       - --import-realm
     ports:
       - "8080:8080"

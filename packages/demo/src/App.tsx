@@ -5,8 +5,8 @@ import { apisixOidcAuthProvider, httpClient } from "@arte/ra-apisix-oidc";
 import simpleRestDataProvider from "ra-data-simple-rest";
 
 const dataProvider = simpleRestDataProvider(
-  "http://127.0.0.1:9080/api",
-  httpClient,
+  "http://localhost:9080/api",
+  httpClient(),
 );
 const apisixAuthProvider = apisixOidcAuthProvider();
 

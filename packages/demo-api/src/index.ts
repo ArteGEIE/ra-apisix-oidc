@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: "http://127.0.0.1:9080",
+    origin: "http://localhost:9080",
     allowedHeaders: [
         'Origin',
         'X-Requested-With',
@@ -72,7 +72,6 @@ app.get('/api/users/:id', (req, res) => {
 
 app.get('/oidc/me', (req, res) => {
     const accessToken = req.headers['x-access-token'];
-    const idToken = req.headers['x-id-token'];
     if (!accessToken) {
         return res.status(401).json({
             error: 'Unauthorized',
@@ -83,8 +82,7 @@ app.get('/oidc/me', (req, res) => {
     const user = jwt.decode(accessToken as string) as jwt.JwtPayload;
     return res.status(200).json({
         user,
-        accessToken,
-        idToken,
+        accessToken
     });
 });
 
