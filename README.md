@@ -144,6 +144,7 @@ All services are orchestrated via Docker Compose.
    ```
 3. **Access the demo app:**
    - Open [http://localhost:9080](http://localhost:9080)
+   - Login/password : user1/password
 
 4. **Stop the demo:**
    ```sh
