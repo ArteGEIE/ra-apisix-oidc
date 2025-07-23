@@ -7,7 +7,6 @@ export GID = $(GROUP_ID)
 
 install:
 	@echo "Installing and building ra-apisix-oidc dependencies..."
-	npm install -w @arte/ra-apisix-oidc
 	@make build-ra-apisix-oidc
 	@echo "Installing demo dependencies..."
 	npm install -w demo
@@ -16,7 +15,7 @@ install:
 
 build-ra-apisix-oidc:
 	@echo "Building ra-apisix-oidc..."
-	ARTE_NPMJS_TOKEN= npm run build -w @arte/ra-apisix-oidc
+	npm install -w @arte/ra-apisix-oidc && ARTE_NPMJS_TOKEN= npm run build -w @arte/ra-apisix-oidc
 
 start-demo:
 	@echo "Starting demo..."
