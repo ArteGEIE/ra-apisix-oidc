@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "packages/ra-apisix-oidc",
-    "packages/demo"
+    "packages/demo",
+    "packages/demo-api"
   ],
   "devDependencies": {
     "rimraf": "^5.0.0",

@@ -20,9 +20,6 @@
     "peerDependencies": {
         "ra-core": "*"
     },
-    "dependencies": {
-        "ra-core": "^5.9.2"
-    },
     "scripts": {
         "build": "yarn run build-cjs && yarn run build-esm",
         "build-cjs": "rimraf ./lib && tsc",

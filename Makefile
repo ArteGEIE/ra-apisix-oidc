@@ -5,13 +5,18 @@ GROUP_ID = $(shell id -g)
 export UID = $(USER_ID)
 export GID = $(GROUP_ID)
 
-install: build-ra-apisix-oidc
-	@echo "Installing ra-apisix-oidc dependencies..."
-	npm install
+install:
+	@echo "Installing and building ra-apisix-oidc dependencies..."
+	npm install -w @arte/ra-apisix-oidc
+	@make build-ra-apisix-oidc
+	@echo "Installing demo dependencies..."
+	npm install -w demo
+	@echo "Installing demo-api dependencies..."
+	npm install -w demo-api
 
 build-ra-apisix-oidc:
 	@echo "Building ra-apisix-oidc..."
-	cd packages/ra-apisix-oidc && npm install && ARTE_NPMJS_TOKEN= npm run build
+	ARTE_NPMJS_TOKEN= npm run build -w @arte/ra-apisix-oidc
 
 start-demo:
 	@echo "Starting demo..."
@@ -24,4 +29,4 @@ stop-demo:
 
 publish:
 	@echo "Publishing ra-apisix-oidc package..."
-	cd packages/ra-apisix-oidc && npm publish --access public
+	npm publish -w @arte/ra-apisix-oidc --access public
