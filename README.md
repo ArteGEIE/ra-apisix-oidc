@@ -151,3 +151,10 @@ All services are orchestrated via Docker Compose.
    make stop-demo
    ```
 
+### Credits
+
+This extension was developed by Marmelab for the Arte GEIE team in Strasbourg, France. External contributions and suggestions are welcome. Feel free to open an issue or submit a pull request.
+
+### License
+
+This extension is licensed under the Apache License, Version 2.0. You can find the full license text in the LICENSE file.
