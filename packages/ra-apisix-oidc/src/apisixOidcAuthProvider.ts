@@ -94,6 +94,7 @@ export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => Aut
         return Promise.reject();
       }
       const identity = {
+        ...user,
         id: user.sub,
         fullName: user.preferred_username || user.name || "",
         avatar: user.picture || "",
