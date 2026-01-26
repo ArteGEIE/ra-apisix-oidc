@@ -1,5 +1,4 @@
-import { type AuthProvider, PreviousLocationStorageKey } from "ra-core";
-
+import { type AuthProvider, PreviousLocationStorageKey } from 'ra-core';
 
 export type ApisixAuthProviderParams = {
   loginURL?: string;
@@ -27,56 +26,48 @@ export type ApisixAuthProviderParams = {
  *   meURL: 'http://localhost:9080/oidc/me',
  * });
  */
-export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => AuthProvider = (options) => {
+export const apisixOidcAuthProvider = (
+  options?: ApisixAuthProviderParams
+): AuthProvider => {
   const {
     loginURL = `${window.location.origin}/oidc/login`,
     logoutURL = `${window.location.origin}/oidc/logout`,
     userInfoURL = `${window.location.origin}/oidc/me`,
     storage = localStorage,
   } = options || {};
-  let isRedirecting = false;
   return {
     login: () => {
       return Promise.reject();
     },
     logout: async () => {
-      const accessToken = storage.getItem("access_token");
+      const accessToken = storage.getItem('access_token');
       if (!accessToken) {
-        return Promise.resolve();
+        return Promise.reject();
       }
-      storage.removeItem("access_token");
-      return Promise.resolve(logoutURL);
+      storage.removeItem('access_token');
+      window.location.href = logoutURL;
+      return Promise.reject();
     },
-    checkError: (error) => {
+    checkError: error => {
       if (error.status === 401) {
-        storage.removeItem("access_token");
-        if (!isRedirecting) {
-          isRedirecting = true;
-          saveCurrentLocation(storage);
-          setTimeout(() => {
-            window.location.href = loginURL;
-          }, 100);
-        }
-        return Promise.reject({ logoutUser: false });
+        storage.removeItem('access_token');
+        saveCurrentLocation(storage);
+        window.location.href = loginURL;
+        return Promise.reject();
       }
       return Promise.resolve();
     },
     checkAuth: async () => {
-      const accessToken = storage.getItem("access_token");
+      const accessToken = storage.getItem('access_token');
       if (!accessToken) {
-        if (!isRedirecting) {
-          isRedirecting = true;
-          saveCurrentLocation(storage);
-          setTimeout(() => {
-            window.location.href = loginURL;
-          }, 100);
-        }
-        return Promise.reject({ redirectTo: false });
+        saveCurrentLocation(storage);
+        window.location.href = loginURL;
+        return Promise.reject();
       }
       return Promise.resolve();
     },
     getIdentity: async () => {
-      const accessToken = storage.getItem("access_token");
+      const accessToken = storage.getItem('access_token');
       if (!accessToken) {
         return Promise.reject();
       }
@@ -96,9 +87,9 @@ export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => Aut
       const identity = {
         ...user,
         id: user.sub,
-        fullName: user.preferred_username || user.name || "",
-        avatar: user.picture || "",
-        email: user.email || "",
+        fullName: user.preferred_username || user.name || '',
+        avatar: user.picture || '',
+        email: user.email || '',
         roles: user.roles || [],
       };
       return Promise.resolve(identity);
@@ -112,17 +103,17 @@ export const apisixOidcAuthProvider: (options?: ApisixAuthProviderParams) => Aut
       if (!body.accessToken) {
         return Promise.reject();
       }
-      storage.setItem("access_token", body.accessToken);
+      storage.setItem('access_token', body.accessToken);
     },
-  }
+  };
 };
 
 const saveCurrentLocation = (storage: Storage) => {
-  if (window.location.href.includes("login")) {
+  if (window.location.href.includes('login')) {
     return; // Do not save the location if it's the login page
   }
   const locationToSave = window.location.href
-    .replace(window.location.origin, "")
-    .replace("/#/", "/");
+    .replace(window.location.origin, '')
+    .replace('/#/', '/');
   storage.setItem(PreviousLocationStorageKey, locationToSave);
 };
