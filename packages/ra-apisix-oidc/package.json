@@ -1,6 +1,6 @@
 {
   "name": "@arte/ra-apisix-oidc",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/ArteGEIE/ra-apisix-oidc.git"
@@ -30,6 +30,6 @@
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.9.3"
   }
 }
