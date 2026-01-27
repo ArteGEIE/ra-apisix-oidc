@@ -35,7 +35,7 @@ jobs:
           fi
         shell: bash
       - name: Build
-        run: make build-ra-apisix-oidc
+        run: make install-ra-apisix-oidc build-ra-apisix-oidc
         env:
           ARTE_NPMJS_TOKEN: ${{ secrets.ARTE_NPMJS_TOKEN }}
       - name: Publish to npm

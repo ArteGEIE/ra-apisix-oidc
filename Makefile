@@ -10,6 +10,10 @@ install:
 	npm install
 	@make build-ra-apisix-oidc
 
+install-ra-apisix-oidc:
+	@echo "Installing ra-apisix-oidc dependencies..."
+	npm install -w @arte/ra-apisix-oidc
+
 build-ra-apisix-oidc:
 	@echo "Building ra-apisix-oidc..."
 	ARTE_NPMJS_TOKEN= npm run build -w @arte/ra-apisix-oidc
