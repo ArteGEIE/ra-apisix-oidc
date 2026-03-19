@@ -4,7 +4,6 @@ export type ApisixAuthProviderParams = {
   loginURL?: string;
   logoutURL?: string;
   userInfoURL?: string;
-  credentials?: RequestCredentials;
   storage?: Storage;
 };
 
@@ -15,7 +14,6 @@ export type ApisixAuthProviderParams = {
  * @param {string} [options.loginURL] - Login endpoint URL (default: `${window.location.origin}/oidc/login`)
  * @param {string} [options.logoutURL] - Logout endpoint URL (default: `${window.location.origin}/oidc/logout`)
  * @param {string} [options.userInfoURL] - User info endpoint URL (default: `${window.location.origin}/oidc/me`)
- * @param {RequestCredentials} [options.credentials] - Credentials mode for fetch requests (default: `include`)
  * @param {Storage} [options.storage] - Storage used only to save previous location (default: localStorage)
  * @returns {AuthProvider} A react-admin AuthProvider implementation
  *
@@ -35,7 +33,6 @@ export const apisixOidcAuthProvider = (
     loginURL = `${window.location.origin}/oidc/login`,
     logoutURL = `${window.location.origin}/oidc/logout`,
     userInfoURL = `${window.location.origin}/oidc/me`,
-    credentials = 'include',
     storage = localStorage,
   } = options || {};
   return {
@@ -43,9 +40,7 @@ export const apisixOidcAuthProvider = (
       return Promise.resolve();
     },
     logout: async () => {
-      const response = await fetch(userInfoURL, {
-        credentials,
-      });
+      const response = await fetch(userInfoURL);
       if (response.status === 401) {
         saveCurrentLocation(storage);
         window.location.href = loginURL;
@@ -63,9 +58,7 @@ export const apisixOidcAuthProvider = (
       return Promise.resolve();
     },
     checkAuth: async () => {
-      const response = await fetch(userInfoURL, {
-        credentials,
-      });
+      const response = await fetch(userInfoURL);
       if (response.status === 401) {
         saveCurrentLocation(storage);
         window.location.href = loginURL;
@@ -74,9 +67,7 @@ export const apisixOidcAuthProvider = (
       return Promise.resolve();
     },
     getIdentity: async () => {
-      const response = await fetch(userInfoURL, {
-        credentials,
-      });
+      const response = await fetch(userInfoURL);
       if (!response.ok) {
         return Promise.resolve();
       }

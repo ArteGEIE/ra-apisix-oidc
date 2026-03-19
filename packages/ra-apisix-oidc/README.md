@@ -14,12 +14,7 @@ import { fetchUtils } from "ra-core";
 import { apisixOidcAuthProvider } from "@arte/ra-apisix-oidc";
 import simpleRestDataProvider from "ra-data-simple-rest";
 
-const dataProvider = simpleRestDataProvider("http://localhost:9080/api", (url, options = {}) =>
-  fetchUtils.fetchJson(url, {
-    ...options,
-    credentials: "include",
-  }),
-);
+const dataProvider = simpleRestDataProvider("http://localhost:9080/api");
 
 const authProvider = apisixOidcAuthProvider();
 
@@ -42,7 +37,6 @@ You can customize the authentication provider with the following options:
 - `loginURL` (string, default: `${window.location.origin}/oidc/login`): Login endpoint URL.
 - `logoutURL` (string, default: `${window.location.origin}/oidc/logout`): Logout endpoint URL.
 - `userInfoURL` (string, default: `${window.location.origin}/oidc/me`): User info endpoint URL.
-- `credentials` (`RequestCredentials`, default: `include`): Credentials mode for auth requests.
 - `storage` (Storage, default: `localStorage`): Storage used only to keep previous location.
 
 Example usage:
@@ -54,16 +48,14 @@ const authProvider = apisixOidcAuthProvider({
   loginURL: "http://localhost:9080/oidc/login",
   logoutURL: "http://localhost:9080/oidc/logout",
   userInfoURL: "http://localhost:9080/oidc/me",
-  credentials: "include",
 });
 ```
 
 ## Migration notes (breaking major)
 
-- `httpClient` has been removed from package exports.
+- `httpClient` has been removed from package exports in favor of the default one.
 - Token-in-localStorage auth flow has been removed from `apisixOidcAuthProvider`.
 - `handleCallback` is now a no-op because APISIX handles OIDC session flow.
-- Use your own React-Admin data provider HTTP client configured with credentials (typically `credentials: "include"`).
 
 ## Configuration
 

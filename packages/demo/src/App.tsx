@@ -2,19 +2,9 @@ import { Admin, ListGuesser, Resource, ShowGuesser } from "react-admin";
 import { Layout } from "./Layout";
 
 import { apisixOidcAuthProvider } from "@arte/ra-apisix-oidc";
-import { fetchUtils, type Options } from "ra-core";
 import simpleRestDataProvider from "ra-data-simple-rest";
 
-const sessionHttpClient = (url: string, options: Options = {}) =>
-  fetchUtils.fetchJson(url, {
-    ...options,
-    credentials: "include",
-  });
-
-const dataProvider = simpleRestDataProvider(
-  "http://localhost:9080/api",
-  sessionHttpClient,
-);
+const dataProvider = simpleRestDataProvider("http://localhost:9080/api");
 const apisixAuthProvider = apisixOidcAuthProvider();
 
 export const App = () => (
