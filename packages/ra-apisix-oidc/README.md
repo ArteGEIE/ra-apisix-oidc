@@ -1,7 +1,5 @@
 # @arte/ra-apisix-oidc
 
-## Usage
-
 `@arte/ra-apisix-oidc` provides a React-Admin AuthProvider for authentication via APISIX OIDC endpoints.
 
 This major version uses a session/cookie model: APISIX session state is authoritative, and this package no longer exports an HTTP client.
@@ -72,6 +70,12 @@ APISIX and the upstream API should expose the following behavior:
 
 - **Purpose:** Return user information for the current authenticated APISIX session.
 - **Behavior:**
-  - Requires `x-access-token` propagated by APISIX.
+  - The apisix configuration should use the `unauth_action` to return a `401` status for unauthenticated requests to this endpoint.
   - Returns decoded `user` payload.
   - Returns 401 when unauthenticated.
+
+### `/api`
+
+- **Purpose:** The upstream API should accept authenticated requests based on the APISIX session cookie, without requiring a token in the request.
+- **Behavior:**
+  - The apisix configuration should use the `unauth_action` to return a `401` status for unauthenticated requests to this endpoint.
