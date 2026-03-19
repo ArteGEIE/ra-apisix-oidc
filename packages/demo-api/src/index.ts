@@ -82,7 +82,6 @@ app.get('/oidc/me', (req, res) => {
     const user = jwt.decode(accessToken as string) as jwt.JwtPayload;
     return res.status(200).json({
         user,
-        accessToken
     });
 });
 
@@ -94,8 +93,7 @@ app.get('/oidc/login', (req, res) => {
             message: 'You are not authorized to access this resource.',
         });
     }
-    // redirect to the react-admin page to set the access token in the local storage
-    res.redirect(`/#/auth-callback`);
+    res.redirect(`/`);
 });
 
 app.listen(PORT, () => {

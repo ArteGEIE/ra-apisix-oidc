@@ -2,22 +2,25 @@
 
 ## Usage
 
-`@arte/ra-apisix-oidc` provides a React-Admin AuthProvider and HTTP client for authentication via APISIX OIDC endpoints. Use it in your React-Admin app to enable OpenID Connect authentication through APISIX.
+`@arte/ra-apisix-oidc` provides a React-Admin AuthProvider for authentication via APISIX OIDC endpoints.
+
+This major version uses a session/cookie model: APISIX session state is authoritative, and this package no longer exports an HTTP client.
 
 ### Example
 
 ```tsx
 import { Admin, ListGuesser, Resource, ShowGuesser } from "react-admin";
-import { apisixOidcAuthProvider, httpClient } from '@arte/ra-apisix-oidc';
+import { fetchUtils } from 'ra-core';
+import { apisixOidcAuthProvider } from '@arte/ra-apisix-oidc';
 import simpleRestDataProvider from 'ra-data-simple-rest';
 
-const dataProvider = simpleRestDataProvider('http://localhost:9080/api', httpClient());
+const dataProvider = simpleRestDataProvider('http://localhost:9080/api');
 const authProvider = apisixOidcAuthProvider();
 
 export const App = () => (
   <Admin
     dataProvider={dataProvider}
-    authProvider={apisixAuthProvider}
+    authProvider={authProvider}
     loginPage={false}
   >
     <Resource name="posts" list={ListGuesser} show={ShowGuesser} />
@@ -26,7 +29,7 @@ export const App = () => (
 );
 ```
 
-### AuthProvider and HTTP Client Options
+### AuthProvider Options
 
 #### `apisixOidcAuthProvider(options)`
 
@@ -35,7 +38,7 @@ You can customize the authentication provider with the following options:
 - `loginURL` (string, default: `${window.location.origin}/oidc/login`): Login endpoint URL.
 - `logoutURL` (string, default: `${window.location.origin}/oidc/logout`): Logout endpoint URL.
 - `userInfoURL` (string, default: `${window.location.origin}/oidc/me`): User info endpoint URL.
-- `storage` (Storage, default: `localStorage`): Storage to use for tokens.
+- `storage` (Storage, default: `localStorage`): Storage used only for preserving previous location.
 
 Example usage:
 ```ts
@@ -45,58 +48,42 @@ const authProvider = apisixOidcAuthProvider({
   loginURL: 'http://localhost:9080/oidc/login',
   logoutURL: 'http://localhost:9080/oidc/logout',
   userInfoURL: 'http://localhost:9080/oidc/me',
-  storage: localStorage,
 });
 ```
 
-#### `httpClient(storage?)`
+### Migration notes (breaking major)
 
-The HTTP client automatically attaches authentication tokens to requests. You can customize its behavior with the following options:
-
-- `storage` (Storage, default: `localStorage`): Storage to use for tokens. The access token is expected to be stored under the key `access_token`.
-
-Example usage:
-```ts
-import { httpClient } from '@arte/ra-apisix-oidc';
-
-const client = httpClient(localStorage);
-client('http://localhost:9080/api/posts');
-```
+- `httpClient` has been removed from package exports.
+- Token-in-localStorage auth flow has been removed from `apisixOidcAuthProvider`.
+- `handleCallback` is now a no-op because APISIX manages the OIDC session flow.
+- Consumers should use their own React-Admin data provider client configured with cookie credentials.
 
 
 ### Configuration
 
-The API must implement the following routes to transmit the APISIX token to the frontend:
+APISIX and the upstream API should expose the following behavior:
 
 #### `/oidc/login`
 
-- **Purpose:** Initiates the OIDC login flow. Should validate the presence of the `x-access-token` header and redirect the user to the React-Admin app (e.g., `/#/auth-callback`) to complete authentication and store the token in local storage.
+- **Purpose:** Start OIDC login and redirect back to the app after authentication.
 - **Behavior:**
-  - If `x-access-token` is missing, respond with 401 Unauthorized.
-  - If present, redirect to the frontend callback route.
+  - Unauthenticated users are sent through OIDC login.
+  - Authenticated users are redirected to app root.
 
 ##### Example
 
 ```ts
 app.get('/oidc/login', (req, res) => {
-    const accessToken = req.headers['x-access-token'];
-    if (!accessToken) {
-        return res.status(401).json({
-            error: 'Unauthorized',
-            message: 'You are not authorized to access this resource.',
-        });
-    }
-    // redirect to the react-admin page to set the access token in the local storage
-    res.redirect(`/#/auth-callback`);
+  res.redirect(`/`);
 });
 ```
 
 #### `/oidc/me`
 
-- **Purpose:** Returns user information and tokens for the authenticated user.
+- **Purpose:** Returns user information for the current authenticated APISIX session.
 - **Behavior:**
-  - Requires the `x-access-token` header.
-  - Decodes the access token and returns user info, `accessToken`.
+  - Requires the `x-access-token` header propagated by APISIX.
+  - Decodes the access token and returns user info.
   - If the token is missing or invalid, respond with 401 Unauthorized.
 
 ##### Example
@@ -113,8 +100,7 @@ app.get('/oidc/me', (req, res) => {
 
     const user = jwt.decode(accessToken as string) as jwt.JwtPayload;
     return res.status(200).json({
-        user,
-        accessToken
+      user,
     });
 });
 ```

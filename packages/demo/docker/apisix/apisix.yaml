@@ -41,7 +41,26 @@ routes:
         ssl_verify: false
         session:
           secret: "1234567890123456"
-  # These routes should be secured by "Authorization: Bearer <token>"
+  
+  - name: "userinfo"
+    uris: ["/oidc/me"]
+    upstream_id: 4
+    plugins:
+      cors: {}
+      openid-connect:
+        client_id: apisix
+        client_secret: udfr6ORrDRavq9imuu72c4tpqWC9SHXL
+        discovery: http://localhost:9080/auth/realms/demo/.well-known/openid-configuration
+        redirect_uri: http://localhost:9080/oidc/callback
+        bearer_only: false
+        realm: demo
+        logout_path: "/oidc/logout"
+        unauth_action: deny
+        post_logout_redirect_uri: "http://localhost:9080"
+        ssl_verify: false
+        session:
+          secret: "1234567890123456"
+  # These routes are secured via APISIX OIDC session cookie.
   - name: "server"
     uris: ["/api/*"]
     upstream_id: 4
@@ -52,7 +71,8 @@ routes:
         client_secret: udfr6ORrDRavq9imuu72c4tpqWC9SHXL
         discovery: http://localhost:9080/auth/realms/demo/.well-known/openid-configuration
         scope: "openid profile"
-        bearer_only: true
+        bearer_only: false
+        unauth_action: deny
         realm: demo
         logout_path: "/logout"
         ssl_verify: false

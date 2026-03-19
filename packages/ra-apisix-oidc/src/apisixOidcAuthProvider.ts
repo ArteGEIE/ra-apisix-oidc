@@ -13,8 +13,8 @@ export type ApisixAuthProviderParams = {
  * @param {Object} options - Configuration options
  * @param {string} [options.loginURL] - Login endpoint URL (default: `${window.location.origin}/oidc/login`)
  * @param {string} [options.logoutURL] - Logout endpoint URL (default: `${window.location.origin}/oidc/logout`)
- * @param {string} [options.meURL] - User info endpoint URL (default: `${window.location.origin}/oidc/me`)
- * @param {Storage} [options.storage] - Storage to use for tokens (default: localStorage)
+ * @param {string} [options.userInfoURL] - User info endpoint URL (default: `${window.location.origin}/oidc/me`)
+ * @param {Storage} [options.storage] - Storage used only to save previous location (default: localStorage)
  * @returns {AuthProvider} A react-admin AuthProvider implementation
  *
  * @example
@@ -23,7 +23,7 @@ export type ApisixAuthProviderParams = {
  * const authProvider = apisixOidcAuthProvider({
  *   loginURL: 'http://localhost:9080/oidc/login',
  *   logoutURL: 'http://localhost:9080/oidc/logout',
- *   meURL: 'http://localhost:9080/oidc/me',
+ *   userInfoURL: 'http://localhost:9080/oidc/me',
  * });
  */
 export const apisixOidcAuthProvider = (
@@ -37,52 +37,44 @@ export const apisixOidcAuthProvider = (
   } = options || {};
   return {
     login: () => {
-      return Promise.reject();
+      return Promise.resolve();
     },
     logout: async () => {
-      const accessToken = storage.getItem('access_token');
-      if (!accessToken) {
-        return Promise.reject();
+      const response = await fetch(userInfoURL);
+      if (response.status === 401) {
+        saveCurrentLocation(storage);
+        window.location.href = loginURL;
+        return Promise.resolve();
       }
-      storage.removeItem('access_token');
       window.location.href = logoutURL;
       return Promise.reject();
     },
     checkError: error => {
       if (error.status === 401) {
-        storage.removeItem('access_token');
         saveCurrentLocation(storage);
         window.location.href = loginURL;
-        return Promise.reject();
+        return Promise.resolve();
       }
       return Promise.resolve();
     },
     checkAuth: async () => {
-      const accessToken = storage.getItem('access_token');
-      if (!accessToken) {
+      const response = await fetch(userInfoURL);
+      if (response.status === 401) {
         saveCurrentLocation(storage);
         window.location.href = loginURL;
-        return Promise.reject();
+        return Promise.resolve();
       }
       return Promise.resolve();
     },
     getIdentity: async () => {
-      const accessToken = storage.getItem('access_token');
-      if (!accessToken) {
-        return Promise.reject();
-      }
-      const response = await fetch(userInfoURL, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(userInfoURL);
       if (!response.ok) {
-        return Promise.reject();
+        return Promise.resolve();
       }
       const userInfo = await response.json();
       const { user } = userInfo;
       if (!user) {
-        return Promise.reject();
+        return Promise.resolve();
       }
       const identity = {
         ...user,
@@ -95,15 +87,7 @@ export const apisixOidcAuthProvider = (
       return Promise.resolve(identity);
     },
     handleCallback: async () => {
-      const response = await fetch(userInfoURL);
-      if (!response.ok) {
-        return Promise.reject();
-      }
-      const body = await response.json();
-      if (!body.accessToken) {
-        return Promise.reject();
-      }
-      storage.setItem('access_token', body.accessToken);
+      return Promise.resolve();
     },
   };
 };
